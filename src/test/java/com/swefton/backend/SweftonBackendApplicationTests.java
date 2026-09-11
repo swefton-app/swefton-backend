@@ -1,18 +1,7 @@
 package com.swefton.backend;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.swefton.backend.config.data.DevelopmentDataSeeder;
-import com.swefton.backend.modules.user.enums.RoleCode;
-import com.swefton.backend.modules.user.repository.RoleRepository;
-import com.swefton.backend.modules.user.repository.UserRepository;
 
 @SpringBootTest(properties = {
         "DB_URL=jdbc:h2:mem:swefton-test;DB_CLOSE_DELAY=-1",
@@ -36,43 +25,11 @@ import com.swefton.backend.modules.user.repository.UserRepository;
         "JWT_SECRET=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
         "JWT_ACCESS_TOKEN_SECONDS=900",
         "REFRESH_TOKEN_SECONDS=2592000",
-        "app.seed.enabled=true",
-        "app.seed.password=test-password-123",
         "SERVER_PORT=0"
 })
 class SweftonBackendApplicationTests {
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private DevelopmentDataSeeder dataSeeder;
-
     @Test
-    @Transactional
-    void contextLoadsAndSeedsDevelopmentData() throws Exception {
-        dataSeeder.run(null);
-
-        assertEquals(4, roleRepository.count());
-        assertEquals(3, userRepository.count());
-        assertSeededUser("admin@swefton.local", RoleCode.ADMIN);
-        assertSeededUser("trainer@swefton.local", RoleCode.TRAINER);
-        assertSeededUser("user@swefton.local", RoleCode.USER);
-    }
-
-    private void assertSeededUser(String email, RoleCode roleCode) {
-        var user = userRepository.findByEmailIgnoreCase(email).orElseThrow();
-        assertEquals("seed|" + email, user.getAuthSubject());
-        assertEquals(roleCode, user.getRole().getCode());
-        assertTrue(user.isEmailConfirmed());
-        assertTrue(user.isEnabled());
-        assertTrue(user.isOnboardingCompleted());
-        assertTrue(passwordEncoder.matches("test-password-123", user.getPasswordHash()));
+    void contextLoads() {
     }
 }

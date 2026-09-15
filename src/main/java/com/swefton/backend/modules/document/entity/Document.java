@@ -3,11 +3,11 @@ package com.swefton.backend.modules.document.entity;
 import java.time.LocalDateTime;
 
 import com.swefton.backend.modules.document.enums.DocumentType;
+import com.swefton.backend.modules.document.persistence.DocumentTypeConverter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,7 +38,7 @@ public class Document {
     @Column(name = "content_type", nullable = false, length = 150)
     private String contentType;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = DocumentTypeConverter.class)
     @Column(name = "type", nullable = false, length = 30)
     private DocumentType type;
 

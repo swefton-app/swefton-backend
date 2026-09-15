@@ -2,9 +2,12 @@ package com.swefton.backend.modules.document.entity;
 
 import java.time.LocalDateTime;
 
+import com.swefton.backend.modules.document.enums.DocumentType;
+import com.swefton.backend.modules.document.persistence.DocumentTypeConverter;
 import com.swefton.backend.modules.user.entity.User;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -14,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
@@ -43,8 +47,9 @@ public class UserDocument {
             foreignKey = @ForeignKey(name = "fk_user_documents_document"))
     private Document document;
 
-    @Column (name = "type", nullable = false)
-    private String type;
+    @Convert(converter = DocumentTypeConverter.class)
+    @Column(name = "type", nullable = false, length = 30)
+    private DocumentType type;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -63,5 +68,10 @@ public class UserDocument {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

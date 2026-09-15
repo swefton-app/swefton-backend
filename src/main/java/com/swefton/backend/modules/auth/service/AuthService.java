@@ -15,6 +15,7 @@ import com.swefton.backend.modules.auth.dto.request.RefreshTokenRequest;
 import com.swefton.backend.modules.auth.dto.request.RegisterRequest;
 import com.swefton.backend.modules.auth.dto.request.ResendVerificationCodeRequest;
 import com.swefton.backend.modules.auth.dto.request.VerifyEmailRequest;
+import com.swefton.backend.modules.auth.dto.response.AuthResponse;
 import com.swefton.backend.modules.auth.dto.response.RegisterResponse;
 import com.swefton.backend.modules.auth.dto.response.TokenResponse;
 import com.swefton.backend.modules.user.entity.Role;
@@ -83,7 +84,7 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmailIgnoreCase(normalizeEmail(request.email()))
                 .orElseThrow(this::invalidCredentials);
 
@@ -101,7 +102,7 @@ public class AuthService {
 
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
-        return authTokenService.issue(user);
+        return authTokenService.issue(user, false);
     }
 
     @Transactional(readOnly = true)

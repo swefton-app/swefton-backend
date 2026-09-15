@@ -79,6 +79,7 @@ public class DocumentService {
                 UserDocument userDocument = new UserDocument();
                 userDocument.setUser(trainer);
                 userDocument.setDocument(document);
+                userDocument.setType(type);
                 userDocumentRepository.saveAndFlush(userDocument);
                 return toResponse(document);
             } catch (RuntimeException exception) {
@@ -96,7 +97,7 @@ public class DocumentService {
     @Transactional(readOnly = true)
     public List<DocumentResponse> getCurrentTrainerDocuments() {
         Long trainerId = currentTrainer().getId();
-        return userDocumentRepository.findAllByUserIdOrderByCreatedAtDesc(trainerId)
+        return userDocumentRepository.findAllByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(trainerId)
                 .stream()
                 .map(UserDocument::getDocument)
                 .map(this::toResponse)
@@ -139,7 +140,7 @@ public class DocumentService {
     }
 
     private UserDocument ownedUserDocument(Long documentId) {
-        return userDocumentRepository.findByUserIdAndDocumentId(currentTrainer().getId(), documentId)
+        return userDocumentRepository.findByUserIdAndDocumentIdAndDeletedAtIsNull(currentTrainer().getId(), documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
     }
 

@@ -7,12 +7,16 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.swefton.backend.modules.document.entity.UserDocument;
+import com.swefton.backend.modules.document.enums.DocumentType;
 
 public interface UserDocumentRepository extends JpaRepository<UserDocument, Long> {
 
     @EntityGraph(attributePaths = "document")
-    List<UserDocument> findAllByUserIdOrderByCreatedAtDesc(Long userId);
+    List<UserDocument> findAllByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long userId);
 
     @EntityGraph(attributePaths = "document")
-    Optional<UserDocument> findByUserIdAndDocumentId(Long userId, Long documentId);
+    Optional<UserDocument> findByUserIdAndDocumentIdAndDeletedAtIsNull(Long userId, Long documentId);
+
+    @EntityGraph(attributePaths = "document")
+    Optional<UserDocument> findByUserIdAndTypeAndDeletedAtIsNull(Long userId, DocumentType type);
 }

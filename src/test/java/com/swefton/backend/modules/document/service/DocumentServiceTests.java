@@ -103,6 +103,7 @@ class DocumentServiceTests {
         verify(userDocumentRepository).saveAndFlush(linkCaptor.capture());
         assertThat(linkCaptor.getValue().getUser()).isSameAs(trainer);
         assertThat(linkCaptor.getValue().getDocument().getId()).isEqualTo(11L);
+        assertThat(linkCaptor.getValue().getType()).isEqualTo(DocumentType.LICENCE);
     }
 
     @Test
@@ -166,7 +167,7 @@ class DocumentServiceTests {
 
         when(sessionUser.getUserId()).thenReturn(7L);
         when(userRepository.findById(7L)).thenReturn(Optional.of(trainer));
-        when(userDocumentRepository.findByUserIdAndDocumentId(7L, 11L))
+        when(userDocumentRepository.findByUserIdAndDocumentIdAndDeletedAtIsNull(7L, 11L))
                 .thenReturn(Optional.of(userDocument));
         when(objectStorage.load(document.getStorageKey())).thenReturn(resource);
 

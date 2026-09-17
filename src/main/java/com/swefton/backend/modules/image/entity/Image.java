@@ -3,7 +3,6 @@ package com.swefton.backend.modules.image.entity;
 
 import java.time.LocalDateTime;
 
-import com.swefton.backend.modules.image.enums.ImageType;
 import com.swefton.backend.modules.user.entity.User;
 
 import jakarta.persistence.*;
@@ -28,9 +27,8 @@ public class Image{
     )
     private User user;
 
-    @Enumerated(EnumType.STRING)
     @Column(name="type",nullable=false,length=30)
-    private ImageType type;
+    private String type;
 
     @Column(name="file_path",nullable=false,unique=true,length=500)
     private String filePath;

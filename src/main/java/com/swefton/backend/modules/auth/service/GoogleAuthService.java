@@ -58,7 +58,7 @@ public class GoogleAuthService {
         return authTokenService.issue(user, false);
     }
 
-    private AuthResponse registerGoogleUser(GoogleIdentity identity, RoleCode requestedRole) {
+    private AuthResponse registerGoogleUser(GoogleIdentity identity, String requestedRole) {
         String email = normalizeEmail(identity.getEmail());
 
         if (userRepository.existsByEmailIgnoreCase(email)) {
@@ -68,8 +68,8 @@ public class GoogleAuthService {
                             + "and link Google from account settings.");
         }
 
-        RoleCode roleCode = requestedRole == null ? RoleCode.USER : requestedRole;
-        if (roleCode == RoleCode.ADMIN) {
+        String roleCode = requestedRole == null ? RoleCode.USER : requestedRole;
+        if (RoleCode.ADMIN.equals(roleCode)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "ADMIN cannot be selected during registration");

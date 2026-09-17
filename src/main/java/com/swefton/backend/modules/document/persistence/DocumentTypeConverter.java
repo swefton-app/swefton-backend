@@ -8,28 +8,31 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter
-public class DocumentTypeConverter implements AttributeConverter<DocumentType, String> {
+public class DocumentTypeConverter implements AttributeConverter<String, String> {
 
     private static final String LEGACY_LICENSE = "LICENSE";
 
     @Override
-    public String convertToDatabaseColumn(DocumentType type) {
+    public String convertToDatabaseColumn(String type) {
         if (type == null) {
             return null;
         }
-        return type.name();
+        return normalize(type);
     }
 
     @Override
-    public DocumentType convertToEntityAttribute(String value) {
+    public String convertToEntityAttribute(String value) {
         if (value == null) {
             return null;
         }
 
+        return normalize(value);
+    }
+
+    private String normalize(String value) {
         String normalizedValue = value.trim().toUpperCase(Locale.ROOT);
-        if (LEGACY_LICENSE.equals(normalizedValue)) {
-            return DocumentType.LICENCE;
-        }
-        return DocumentType.valueOf(normalizedValue);
+        return LEGACY_LICENSE.equals(normalizedValue)
+                ? DocumentType.LICENCE
+                : normalizedValue;
     }
 }

@@ -23,7 +23,6 @@ import com.swefton.backend.infrastructure.web.response.FileResponseHelper;
 import com.swefton.backend.modules.document.dto.DocumentResponse;
 import com.swefton.backend.modules.document.entity.Document;
 import com.swefton.backend.modules.document.entity.UserDocument;
-import com.swefton.backend.modules.document.enums.DocumentType;
 import com.swefton.backend.modules.document.repository.DocumentRepository;
 import com.swefton.backend.modules.document.repository.UserDocumentRepository;
 import com.swefton.backend.modules.user.entity.User;
@@ -55,7 +54,7 @@ public class DocumentService {
     private long maxFileSizeBytes;
 
     @Transactional
-    public DocumentResponse upload(MultipartFile file, DocumentType type) {
+    public DocumentResponse upload(MultipartFile file, String type) {
         validate(file);
         if (type == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document type is required");
@@ -129,7 +128,7 @@ public class DocumentService {
     private User currentTrainer() {
         User user = userRepository.findById(sessionUser.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        if (user.getRole() == null || user.getRole().getCode() != RoleCode.TRAINER) {
+        if (user.getRole() == null || !RoleCode.TRAINER.equals(user.getRole().getCode())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can manage documents");
         }
         return user;

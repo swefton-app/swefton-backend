@@ -137,6 +137,7 @@ public class ImageService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found"));
     }
 
+
     private void validateUpload(MultipartFile file, ImagePojo request) {
         if (file == null || file.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image must not be empty");

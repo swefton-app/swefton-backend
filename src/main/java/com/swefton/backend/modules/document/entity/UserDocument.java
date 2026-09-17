@@ -2,7 +2,6 @@ package com.swefton.backend.modules.document.entity;
 
 import java.time.LocalDateTime;
 
-import com.swefton.backend.modules.document.enums.DocumentType;
 import com.swefton.backend.modules.document.persistence.DocumentTypeConverter;
 import com.swefton.backend.modules.user.entity.User;
 
@@ -49,7 +48,7 @@ public class UserDocument {
 
     @Convert(converter = DocumentTypeConverter.class)
     @Column(name = "type", nullable = false, length = 30)
-    private DocumentType type;
+    private String type;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

@@ -1,6 +1,5 @@
 package com.swefton.backend.modules.auth.entity;
 
-import com.swefton.backend.modules.auth.enums.AuthProvider;
 import com.swefton.backend.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -34,9 +33,8 @@ public class UserAuthProvider{
     @JoinColumn(name="user_id",nullable=false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable=false,length=30)
-    private AuthProvider provider;
+    private String provider;
 
     @Column(name="provider_subject",nullable=false,length=255)
     private String providerSubject;

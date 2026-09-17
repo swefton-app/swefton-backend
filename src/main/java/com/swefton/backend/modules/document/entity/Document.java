@@ -2,7 +2,6 @@ package com.swefton.backend.modules.document.entity;
 
 import java.time.LocalDateTime;
 
-import com.swefton.backend.modules.document.enums.DocumentType;
 import com.swefton.backend.modules.document.persistence.DocumentTypeConverter;
 
 import jakarta.persistence.Column;
@@ -40,7 +39,7 @@ public class Document {
 
     @Convert(converter = DocumentTypeConverter.class)
     @Column(name = "type", nullable = false, length = 30)
-    private DocumentType type;
+    private String type;
 
     @Column(name = "file_size", nullable = false)
     private long fileSize;

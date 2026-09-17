@@ -9,6 +9,7 @@ import org.thymeleaf.context.Context;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.swefton.backend.modules.document.dto.request.GenerateCvRequest;
+import com.swefton.backend.modules.document.enums.CvTemplate;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,9 +26,11 @@ public class CvPdfService {
         context.setVariable("cv", request);
 
         String template = switch (request.getTemplate()) {
-            case MODERN -> "cv/modern";
-            case PROFESSIONAL -> "cv/professional";
-            case MINIMAL -> "cv/minimal";
+            case CvTemplate.MODERN -> "cv/modern";
+            case CvTemplate.PROFESSIONAL -> "cv/professional";
+            case CvTemplate.MINIMAL -> "cv/minimal";
+            default -> throw new IllegalArgumentException(
+                    "Unsupported CV template: " + request.getTemplate());
         };
         String html = templateEngine.process(template, context);
 

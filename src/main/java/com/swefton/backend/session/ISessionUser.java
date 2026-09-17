@@ -1,12 +1,10 @@
 package com.swefton.backend.session;
 
-import com.swefton.backend.modules.user.enums.RoleCode;
-
 public interface ISessionUser {
 
     Long getUserId();
 
-    RoleCode getRole();
+    String getRole();
 
-    boolean hasRole(RoleCode role);
+    boolean hasRole(String role);
 }

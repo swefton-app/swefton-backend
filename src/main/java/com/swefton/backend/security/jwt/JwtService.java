@@ -77,7 +77,6 @@ public class JwtService {
                                 "role",
                                 user.getRole()
                                         .getCode()
-                                        .name()
                         )
 
                         .claim(

@@ -48,8 +48,8 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
-        RoleCode requestedRole = request.role() == null ? RoleCode.USER : request.role();
-        if (requestedRole == RoleCode.ADMIN) {
+        String requestedRole = request.role() == null ? RoleCode.USER : request.role();
+        if (RoleCode.ADMIN.equals(requestedRole)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "ADMIN cannot be selected during registration");

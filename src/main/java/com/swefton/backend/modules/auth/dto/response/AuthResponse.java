@@ -1,6 +1,5 @@
 package com.swefton.backend.modules.auth.dto.response;
 
-import com.swefton.backend.modules.user.enums.RoleCode;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +17,7 @@ public class AuthResponse{
 
     private Long userId;
     private String email;
-    private RoleCode role;
+    private String role;
 
     private boolean newUser;
     private boolean onboardingCompleted;

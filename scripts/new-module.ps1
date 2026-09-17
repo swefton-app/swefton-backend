@@ -7,7 +7,6 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
-
 $basePackage = "com.swefton.backend"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $packagePath = $basePackage.Replace('.', [IO.Path]::DirectorySeparatorChar)

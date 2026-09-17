@@ -103,7 +103,7 @@ public class CvDocumentService {
     private User currentTrainer() {
         User user = userRepository.findById(sessionUser.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        if (user.getRole() == null || user.getRole().getCode() != RoleCode.TRAINER) {
+        if (user.getRole() == null || !RoleCode.TRAINER.equals(user.getRole().getCode())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can generate a professional CV");
         }
         return user;

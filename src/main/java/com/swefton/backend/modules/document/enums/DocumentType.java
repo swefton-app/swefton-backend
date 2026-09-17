@@ -1,13 +1,12 @@
 package com.swefton.backend.modules.document.enums;
 
-public enum DocumentType {
-    LICENCE,
-    /**
-     * Legacy database/API spelling kept so schema validation accepts existing rows.
-     * New application code uses {@link #LICENCE}.
-     */
-    @Deprecated
-    LICENSE,
-    CV,
-    OTHER
+public final class DocumentType {
+
+    public static final String LICENCE = "LICENCE";
+    public static final String LICENSE = "LICENSE";
+    public static final String CV = "CV";
+    public static final String OTHER = "OTHER";
+
+    private DocumentType() {
+    }
 }

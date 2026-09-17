@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -36,8 +36,12 @@ class CvPdfServiceTests {
     }
 
     @ParameterizedTest
-    @EnumSource(CvTemplate.class)
-    void generatesAValidPdfForEveryTemplate(CvTemplate template) {
+    @ValueSource(strings = {
+            CvTemplate.MODERN,
+            CvTemplate.PROFESSIONAL,
+            CvTemplate.MINIMAL
+    })
+    void generatesAValidPdfForEveryTemplate(String template) {
         GenerateCvRequest request = new GenerateCvRequest();
         request.setTemplate(template);
         request.setFirstName("Franko");

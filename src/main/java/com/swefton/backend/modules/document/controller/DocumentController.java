@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.swefton.backend.modules.document.api.DocumentApi;
 import com.swefton.backend.modules.document.dto.DocumentResponse;
-import com.swefton.backend.modules.document.enums.DocumentType;
 import com.swefton.backend.modules.document.service.DocumentService;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +34,7 @@ public class DocumentController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentResponse> upload(
             @RequestPart("file") MultipartFile file,
-            @RequestParam("type") DocumentType type) {
+            @RequestParam("type") String type) {
         return ResponseEntity.status(HttpStatus.CREATED).body(documentService.upload(file, type));
     }
 

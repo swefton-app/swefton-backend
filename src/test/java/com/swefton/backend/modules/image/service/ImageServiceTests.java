@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.swefton.backend.infrastructure.storage.ObjectStorage;
 import com.swefton.backend.infrastructure.web.response.FileResponseHelper;
@@ -115,5 +116,20 @@ class ImageServiceTests {
         assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
                 .contains("inline")
                 .contains("avatar.png");
+    }
+
+    @Test
+    void uploadRejectsUnknownStringImageType() {
+        ImagePojo request = new ImagePojo();
+        request.setType("UNKNOWN");
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "avatar.png", MediaType.IMAGE_PNG_VALUE, "image".getBytes());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> imageService.upload(file, request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("400 BAD_REQUEST")
+                .hasMessageContaining("Image type is invalid");
+
+        verify(imageRepository, org.mockito.Mockito.never()).saveAndFlush(any(Image.class));
     }
 }

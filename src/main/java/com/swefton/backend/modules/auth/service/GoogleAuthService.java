@@ -69,10 +69,10 @@ public class GoogleAuthService {
         }
 
         String roleCode = requestedRole == null ? RoleCode.USER : requestedRole;
-        if (RoleCode.ADMIN.equals(roleCode)) {
+        if (RoleCode.ADMIN.equals(roleCode) || RoleCode.STAFF.equals(roleCode)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "ADMIN cannot be selected during registration");
+                    "This role cannot be selected during registration");
         }
 
         Role role = roleRepository.findByCode(roleCode)

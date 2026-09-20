@@ -1,5 +1,6 @@
 package com.swefton.backend.modules.image.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,4 +15,6 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     Optional<Image> findByIdAndDeletedAtIsNull(Long id);
 
     Optional<Image> findByIdAndUserIdAndDeletedAtIsNull(Long id, Long userId);
+
+    List<Image> findAllByIdInAndUserIdAndDeletedAtIsNull(Collection<Long> ids, Long userId);
 }

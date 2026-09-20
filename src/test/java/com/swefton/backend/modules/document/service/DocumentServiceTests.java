@@ -132,6 +132,19 @@ class DocumentServiceTests {
     }
 
     @Test
+    void uploadRejectsUnknownDocumentType() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "certificate.pdf", "application/pdf", "test".getBytes());
+
+        assertThatThrownBy(() -> documentService.upload(file, "UNKNOWN"))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("400 BAD_REQUEST")
+                .hasMessageContaining("Document type is invalid");
+
+        verify(objectStorage, never()).store(anyString(), any(InputStream.class));
+    }
+
+    @Test
     void uploadDeletesStoredFileWhenDatabaseWriteFails() {
         MockMultipartFile file = new MockMultipartFile(
                 "file", "certificate.pdf", "application/pdf", "test".getBytes());

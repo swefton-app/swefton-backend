@@ -23,6 +23,7 @@ import com.swefton.backend.infrastructure.storage.ObjectStorage;
 import com.swefton.backend.infrastructure.web.response.FileResponseHelper;
 import com.swefton.backend.modules.image.dto.ImagePojo;
 import com.swefton.backend.modules.image.entity.Image;
+import com.swefton.backend.modules.image.enums.ImageType;
 import com.swefton.backend.modules.image.repository.ImageRepository;
 import com.swefton.backend.modules.user.entity.User;
 import com.swefton.backend.modules.user.repository.UserRepository;
@@ -61,7 +62,7 @@ public class ImageService {
             try {
                 Image image = new Image();
                 image.setUser(user);
-                image.setType(request.getType());
+                image.setType(validatedType(request.getType()));
                 image.setFilePath(storageKey);
                 image.setOriginalName(originalName);
                 image.setContentType(contentType);
@@ -108,7 +109,7 @@ public class ImageService {
         }
         Image image = ownedImage(id);
         if (request.getType() != null) {
-            image.setType(request.getType());
+            image.setType(validatedType(request.getType()));
         }
         if (request.getPosition() != null) {
             if (request.getPosition() < 0) {
@@ -148,6 +149,7 @@ public class ImageService {
         if (request.getType() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image type is required");
         }
+        validatedType(request.getType());
         if (request.getPosition() != null && request.getPosition() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image position must not be negative");
         }
@@ -158,6 +160,14 @@ public class ImageService {
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported image type");
         }
+    }
+
+    private String validatedType(String value) {
+        String normalized = ImageType.normalize(value);
+        if (!ImageType.exists(normalized)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image type is invalid");
+        }
+        return normalized;
     }
 
     private String safeOriginalName(String originalName) {

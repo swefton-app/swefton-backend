@@ -87,8 +87,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/trainer/**")
                         .hasRole("TRAINER")
 
-                        .requestMatchers("/api/v1/gym-owner/**")
-                        .hasRole("GYM_OWNER")
+                        .requestMatchers(
+                                "/api/v1/gyms/**",
+                                "/api/v1/facility/documents/**",
+                                "/api/v1/gym-owner/**")
+                        .hasRole("FACILITY_OWNER")
+
+                        .requestMatchers("/api/v1/facilities/**")
+                        .hasAnyRole("FACILITY_OWNER", "ADMIN")
+
+                        .requestMatchers("/api/v1/staff/**")
+                        .hasRole("STAFF")
 
                         .requestMatchers("/api/v1/appointments/**")
                         .hasRole("USER")

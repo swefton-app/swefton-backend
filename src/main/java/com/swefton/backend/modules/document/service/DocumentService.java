@@ -23,6 +23,7 @@ import com.swefton.backend.infrastructure.web.response.FileResponseHelper;
 import com.swefton.backend.modules.document.dto.DocumentResponse;
 import com.swefton.backend.modules.document.entity.Document;
 import com.swefton.backend.modules.document.entity.UserDocument;
+import com.swefton.backend.modules.document.enums.DocumentType;
 import com.swefton.backend.modules.document.repository.DocumentRepository;
 import com.swefton.backend.modules.document.repository.UserDocumentRepository;
 import com.swefton.backend.modules.user.entity.User;
@@ -56,13 +57,11 @@ public class DocumentService {
     @Transactional
     public DocumentResponse upload(MultipartFile file, String type) {
         validate(file);
-        if (type == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document type is required");
-        }
-        User trainer = currentTrainer();
+        String documentType = validatedDocumentType(type);
+        User owner = currentDocumentOwner();
         String originalFileName = safeOriginalFileName(file.getOriginalFilename());
         String contentType = file.getContentType().toLowerCase(Locale.ROOT);
-        String storageKey = createStorageKey(trainer.getId(), originalFileName);
+        String storageKey = createStorageKey(owner, originalFileName);
 
         try (InputStream content = file.getInputStream()) {
             long storedSize = objectStorage.store(storageKey, content);
@@ -71,14 +70,14 @@ public class DocumentService {
                 document.setOriginalFileName(originalFileName);
                 document.setStorageKey(storageKey);
                 document.setContentType(contentType);
-                document.setType(type);
+                document.setType(documentType);
                 document.setFileSize(storedSize);
                 document = documentRepository.saveAndFlush(document);
 
                 UserDocument userDocument = new UserDocument();
-                userDocument.setUser(trainer);
+                userDocument.setUser(owner);
                 userDocument.setDocument(document);
-                userDocument.setType(type);
+                userDocument.setType(documentType);
                 userDocumentRepository.saveAndFlush(userDocument);
                 return toResponse(document);
             } catch (RuntimeException exception) {
@@ -95,8 +94,13 @@ public class DocumentService {
 
     @Transactional(readOnly = true)
     public List<DocumentResponse> getCurrentTrainerDocuments() {
-        Long trainerId = currentTrainer().getId();
-        return userDocumentRepository.findAllByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(trainerId)
+        return getCurrentUserDocuments();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DocumentResponse> getCurrentUserDocuments() {
+        Long ownerId = currentDocumentOwner().getId();
+        return userDocumentRepository.findAllByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(ownerId)
                 .stream()
                 .map(UserDocument::getDocument)
                 .map(this::toResponse)
@@ -125,11 +129,16 @@ public class DocumentService {
         objectStorage.delete(document.getStorageKey());
     }
 
-    private User currentTrainer() {
+    private User currentDocumentOwner() {
         User user = userRepository.findById(sessionUser.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        if (user.getRole() == null || !RoleCode.TRAINER.equals(user.getRole().getCode())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can manage documents");
+        String role = user.getRole() == null ? null : user.getRole().getCode();
+        if (!RoleCode.TRAINER.equals(role)
+                && !RoleCode.FACILITY_OWNER.equals(role)
+                && !RoleCode.STAFF.equals(role)) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only trainers, facility owners and invited staff can manage professional documents");
         }
         return user;
     }
@@ -139,7 +148,9 @@ public class DocumentService {
     }
 
     private UserDocument ownedUserDocument(Long documentId) {
-        return userDocumentRepository.findByUserIdAndDocumentIdAndDeletedAtIsNull(currentTrainer().getId(), documentId)
+        return userDocumentRepository.findByUserIdAndDocumentIdAndDeletedAtIsNull(
+                        currentDocumentOwner().getId(),
+                        documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
     }
 
@@ -172,13 +183,28 @@ public class DocumentService {
         }
     }
 
-    private String createStorageKey(Long trainerId, String fileName) {
+    private String createStorageKey(User owner, String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         String extension = dotIndex >= 0 ? fileName.substring(dotIndex).toLowerCase(Locale.ROOT) : "";
         if (extension.length() > 15 || !extension.matches("\\.[a-z0-9]+")) {
             extension = "";
         }
-        return "trainer-documents/" + trainerId + "/" + UUID.randomUUID() + extension;
+        String role = owner.getRole().getCode();
+        String folder = RoleCode.FACILITY_OWNER.equals(role)
+                ? "facility-documents/"
+                : RoleCode.STAFF.equals(role) ? "staff-documents/" : "trainer-documents/";
+        return folder + owner.getId() + "/" + UUID.randomUUID() + extension;
+    }
+
+    private String validatedDocumentType(String value) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document type is required");
+        }
+        String normalized = DocumentType.normalize(value);
+        if (!DocumentType.exists(normalized)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document type is invalid");
+        }
+        return normalized;
     }
 
     private DocumentResponse toResponse(Document document) {

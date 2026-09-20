@@ -56,6 +56,89 @@ public class EmailService {
         }
     }
 
+    public void sendStaffInvitation(
+            String recipient,
+            String facilityName,
+            String onboardingUrl,
+            long expirationHours) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(from);
+            helper.setTo(recipient);
+            helper.setSubject("You are invited to join " + facilityName + " on Swefton");
+            helper.setText(
+                    staffInvitationPlainText(facilityName, onboardingUrl, expirationHours),
+                    staffInvitationHtml(facilityName, onboardingUrl, expirationHours));
+            helper.addInline(
+                    "sweftonLogo",
+                    new ClassPathResource("static/images/SweftonLogoHeader.png"),
+                    "image/png");
+            mailSender.send(message);
+        } catch (MessagingException exception) {
+            throw new IllegalStateException("Could not prepare staff invitation email", exception);
+        }
+    }
+
+    private String staffInvitationPlainText(
+            String facilityName,
+            String onboardingUrl,
+            long expirationHours) {
+        return """
+                Join %s on Swefton
+
+                You have been invited to join the staff team at %s.
+
+                Start onboarding: %s
+
+                First you will create your password, then complete your staff profile.
+                This private link expires in %d hours and can be used only once.
+
+                If you were not expecting this invitation, you can safely ignore this email.
+                """.formatted(facilityName, facilityName, onboardingUrl, expirationHours);
+    }
+
+    private String staffInvitationHtml(
+            String facilityName,
+            String onboardingUrl,
+            long expirationHours) {
+        String safeFacilityName = escapeHtml(facilityName);
+        String safeUrl = escapeHtml(onboardingUrl);
+        return """
+                <!doctype html>
+                <html lang="en">
+                <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Staff invitation</title></head>
+                <body style="margin:0;padding:0;background:#050608;color:#f6f8fc;font-family:Arial,Helvetica,sans-serif;">
+                  <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background:#050608;">
+                    <tr><td align="center" style="padding:40px 16px;">
+                      <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width:560px;border:1px solid #343b49;border-radius:20px;background:#0c0f16;">
+                        <tr><td align="center" style="padding:36px 36px 8px;"><img src="cid:sweftonLogo" width="300" alt="Swefton" style="display:block;max-width:100%%;height:auto;border:0;"></td></tr>
+                        <tr><td align="center" style="padding:20px 36px 40px;">
+                          <div style="display:inline-block;padding:7px 13px;border-radius:999px;background:#141925;color:#02d9f5;font-size:11px;font-weight:700;letter-spacing:1px;">STAFF INVITATION</div>
+                          <h1 style="margin:22px 0 12px;font-size:28px;line-height:36px;">Join %s</h1>
+                          <p style="margin:0;max-width:430px;color:#aeb6c5;font-size:15px;line-height:24px;">You have been invited to join this facility's team on Swefton. Create your password first, then complete your staff onboarding.</p>
+                          <table role="presentation" cellspacing="0" cellpadding="0" style="margin:30px auto 24px;"><tr><td align="center" style="border-radius:12px;background:#b9f34b;"><a href="%s" style="display:inline-block;padding:15px 24px;color:#17201b;font-size:14px;font-weight:800;text-decoration:none;">Start onboarding</a></td></tr></table>
+                          <p style="margin:0;color:#7f8797;font-size:12px;line-height:20px;">This private link expires in <strong style="color:#02d9f5;">%d hours</strong> and can be used only once.</p>
+                          <div style="height:1px;margin:28px 0 20px;background:#242935;"></div>
+                          <p style="margin:0;color:#596171;font-size:12px;line-height:19px;">If you were not expecting this invitation, you can safely ignore this email.</p>
+                        </td></tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """.formatted(safeFacilityName, safeUrl, expirationHours);
+    }
+
+    private String escapeHtml(String value) {
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
+
     private String plainText(String code, long expirationMinutes) {
         return """
                 Verify your Swefton account

@@ -45,7 +45,7 @@ public class CvDocumentService {
 
     @Transactional
     public DocumentResponse generate(GenerateCvRequest request) {
-        User trainer = currentTrainer();
+        User trainer = currentProfessional();
         byte[] pdf = cvPdfService.generate(request);
         String fileName = createFileName(request.getFirstName(), request.getLastName());
         String storageKey = createStorageKey(trainer.getId());
@@ -100,11 +100,12 @@ public class CvDocumentService {
         }
     }
 
-    private User currentTrainer() {
+    private User currentProfessional() {
         User user = userRepository.findById(sessionUser.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        if (user.getRole() == null || !RoleCode.TRAINER.equals(user.getRole().getCode())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can generate a professional CV");
+        String role = user.getRole() == null ? null : user.getRole().getCode();
+        if (!RoleCode.TRAINER.equals(role) && !RoleCode.STAFF.equals(role)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers and invited staff can generate a professional CV");
         }
         return user;
     }
@@ -115,7 +116,8 @@ public class CvDocumentService {
     }
 
     private String createStorageKey(Long trainerId) {
-        return "trainer-documents/" + trainerId + "/cv/" + UUID.randomUUID() + ".pdf";
+        return (RoleCode.STAFF.equals(sessionUser.getRole()) ? "staff-documents/" : "trainer-documents/")
+                + trainerId + "/cv/" + UUID.randomUUID() + ".pdf";
     }
 
     private String slug(String value) {

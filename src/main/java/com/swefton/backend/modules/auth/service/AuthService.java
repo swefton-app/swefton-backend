@@ -49,10 +49,10 @@ public class AuthService {
         }
 
         String requestedRole = request.role() == null ? RoleCode.USER : request.role();
-        if (RoleCode.ADMIN.equals(requestedRole)) {
+        if (RoleCode.ADMIN.equals(requestedRole) || RoleCode.STAFF.equals(requestedRole)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "ADMIN cannot be selected during registration");
+                    "This role cannot be selected during registration");
         }
 
         Role role = roleRepository.findByCode(requestedRole)

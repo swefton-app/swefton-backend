@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,8 +19,10 @@ import com.swefton.backend.modules.auth.dto.request.ResendVerificationCodeReques
 import com.swefton.backend.modules.auth.dto.request.VerifyEmailRequest;
 import com.swefton.backend.modules.auth.dto.response.RegisterResponse;
 import com.swefton.backend.modules.auth.dto.response.AuthResponse;
+import com.swefton.backend.modules.auth.dto.response.AuthDestinationResponse;
 import com.swefton.backend.modules.auth.dto.response.TokenResponse;
 import com.swefton.backend.modules.auth.service.AuthService;
+import com.swefton.backend.modules.auth.service.AuthDestinationService;
 import com.swefton.backend.modules.auth.service.GoogleAuthService;
 
 import jakarta.validation.Valid;
@@ -31,7 +34,13 @@ import lombok.RequiredArgsConstructor;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthDestinationService authDestinationService;
     private final GoogleAuthService googleAuthService;
+
+    @GetMapping("/destination")
+    public ResponseEntity<AuthDestinationResponse> destination() {
+        return ResponseEntity.ok(authDestinationService.resolve());
+    }
 
     @PostMapping("/google")
     public ResponseEntity<AuthResponse> google(@Valid @RequestBody GoogleAuthRequest request) {

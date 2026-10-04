@@ -220,6 +220,30 @@ depending on the responsibilities of the module.
 
 ---
 
+# Image Ownership
+
+Images use three normal JPA relationships:
+
+```text
+User 1 --------< Images
+Facility 1 ----< Images
+Machine 1 -----< Images
+```
+
+Each `Image` has nullable `user`, `facility`, and `machine` relations. Exactly one
+of those relations must be set. A trainer uses the `user` relation because every
+trainer is also a user.
+
+New uploads initially belong to the authenticated user. When a facility or
+machine is created, its service validates the requested image IDs and transfers
+those images to the concrete facility or machine relation. Module controllers
+only pass image IDs; ownership changes stay in the services.
+
+`ImageOwnershipMigration` moves old facility logo, cover, and gallery links into
+the new `Image.facility` relationship on startup.
+
+---
+
 # Core Domain Model
 
 ## User

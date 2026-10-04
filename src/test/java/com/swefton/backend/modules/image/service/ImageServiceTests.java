@@ -94,6 +94,9 @@ class ImageServiceTests {
         ArgumentCaptor<Image> imageCaptor = ArgumentCaptor.forClass(Image.class);
         verify(imageRepository).saveAndFlush(imageCaptor.capture());
         assertThat(imageCaptor.getValue().getFilePath()).startsWith("user-images/42/");
+        assertThat(imageCaptor.getValue().getUser()).isSameAs(user);
+        assertThat(imageCaptor.getValue().getFacility()).isNull();
+        assertThat(imageCaptor.getValue().getMachine()).isNull();
     }
 
     @Test

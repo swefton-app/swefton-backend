@@ -17,4 +17,9 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     Optional<Image> findByIdAndUserIdAndDeletedAtIsNull(Long id, Long userId);
 
     List<Image> findAllByIdInAndUserIdAndDeletedAtIsNull(Collection<Long> ids, Long userId);
+
+    List<Image> findAllByFacilityIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(Long facilityId);
+
+    List<Image> findAllByMachineIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(Long machineId);
+
 }

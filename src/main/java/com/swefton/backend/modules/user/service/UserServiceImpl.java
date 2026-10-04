@@ -6,6 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.swefton.backend.modules.user.dto.OnboardingUserPojo;
+import com.swefton.backend.modules.image.dto.ImagePojo;
+import com.swefton.backend.modules.image.enums.ImageType;
+import com.swefton.backend.modules.image.repository.ImageRepository;
 import com.swefton.backend.modules.user.dto.UserAddressPojo;
 import com.swefton.backend.modules.user.dto.UserPreferencesPojo;
 import com.swefton.backend.modules.user.dto.UserProfilePojo;
@@ -29,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final UserProfileRepository userProfileRepository;
     private final UserPreferencesRepository userPreferencesRepository;
     private final UserAddressRepository userAddressRepository;
+    private final ImageRepository imageRepository;
     private final ISessionUser sessionUser;
 
     @Override
@@ -104,7 +108,16 @@ public class UserServiceImpl implements UserService {
             UserPreferences preferences,
             UserAddress address) {
         OnboardingUserPojo response = new OnboardingUserPojo();
-        response.setProfile(new UserProfilePojo(profile));
+        UserProfilePojo profileResponse = new UserProfilePojo(profile);
+        profileResponse.setAvatarUrl(imageRepository
+                .findAllByUserIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(user.getId())
+                .stream()
+                .filter(image -> ImageType.PROFILE.equals(image.getType()))
+                .findFirst()
+                .map(ImagePojo::new)
+                .map(ImagePojo::getUrl)
+                .orElse(null));
+        response.setProfile(profileResponse);
         response.setPreferences(new UserPreferencesPojo(preferences));
         response.setAddress(new UserAddressPojo(address));
         response.setOnboardingCompleted(user.isOnboardingCompleted());

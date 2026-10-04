@@ -28,6 +28,8 @@ import com.swefton.backend.modules.gym.entity.Gym;
 import com.swefton.backend.modules.gym.enums.GymStatus;
 import com.swefton.backend.modules.gym.enums.GymType;
 import com.swefton.backend.modules.gym.repository.GymRepository;
+import com.swefton.backend.modules.image.entity.Image;
+import com.swefton.backend.modules.image.enums.ImageType;
 import com.swefton.backend.modules.image.repository.ImageRepository;
 import com.swefton.backend.modules.user.entity.User;
 import com.swefton.backend.modules.user.repository.UserRepository;
@@ -56,7 +58,12 @@ class GymServiceTests {
 
     @BeforeEach
     void setUp() {
-        gymService = new GymService(gymRepository, imageRepository, userRepository, sessionUser, ratingService);
+        gymService = new GymService(
+                gymRepository,
+                imageRepository,
+                userRepository,
+                sessionUser,
+                ratingService);
     }
 
     @Test
@@ -132,6 +139,47 @@ class GymServiceTests {
         verify(gymRepository).saveAndFlush(captor.capture());
         assertThat(captor.getValue().getFacility().getCategory())
                 .isEqualTo(FacilityCategory.SWIMMING);
+    }
+
+    @Test
+    void createTransfersSelectedImagesIntoTheFacilityCollection() {
+        User owner = new User();
+        owner.setId(42L);
+        owner.setOnboardingCompleted(true);
+        Image logo = image(owner, 11L, ImageType.LOGO, 0);
+        Image gallery = image(owner, 12L, ImageType.GALLERY, 1);
+        CreateFacilityRequest base = request("Power House");
+        CreateFacilityRequest request = new CreateFacilityRequest(
+                base.name(), base.category(), base.description(), base.publicEmail(), base.phoneNumber(),
+                base.websiteUrl(), base.addressLine(), base.city(), base.state(), base.postalCode(),
+                base.country(), base.formattedAddress(), base.latitude(), base.longitude(), base.type(),
+                base.capacity(), base.open24Hours(), logo.getId(), null, List.of(gallery.getId()));
+
+        when(sessionUser.getUserId()).thenReturn(42L);
+        when(userRepository.findById(42L)).thenReturn(Optional.of(owner));
+        when(gymRepository.existsByFacilityOwnerIdAndFacilityNameIgnoreCase(42L, "Power House"))
+                .thenReturn(false);
+        when(imageRepository.findByIdAndUserIdAndDeletedAtIsNull(11L, 42L))
+                .thenReturn(Optional.of(logo));
+        when(imageRepository.findAllByIdInAndUserIdAndDeletedAtIsNull(java.util.Set.of(12L), 42L))
+                .thenReturn(List.of(gallery));
+        when(gymRepository.saveAndFlush(any(Gym.class))).thenAnswer(invocation -> {
+            Gym saved = invocation.getArgument(0);
+            saved.setId(7L);
+            saved.getFacility().setId(8L);
+            saved.getFacility().prePersist();
+            saved.prePersist();
+            return saved;
+        });
+
+        GymResponse response = gymService.create(request);
+
+        assertThat(response.logoImage().getId()).isEqualTo(11L);
+        assertThat(response.galleryImages()).singleElement().extracting(image -> image.getId()).isEqualTo(12L);
+        assertThat(logo.getUser()).isNull();
+        assertThat(logo.getFacility().getId()).isEqualTo(8L);
+        assertThat(gallery.getUser()).isNull();
+        assertThat(gallery.getFacility()).isSameAs(logo.getFacility());
     }
 
     @Test
@@ -300,4 +348,18 @@ class GymServiceTests {
                 null,
                 java.util.List.of());
     }
+
+    private Image image(User uploader, Long id, String type, int position) {
+        Image image = new Image();
+        image.setId(id);
+        image.assignToUser(uploader);
+        image.setType(type);
+        image.setPosition(position);
+        image.setFilePath("user-images/42/" + id + ".png");
+        image.setOriginalName(id + ".png");
+        image.setContentType("image/png");
+        image.setFileSize(5L);
+        return image;
+    }
+
 }

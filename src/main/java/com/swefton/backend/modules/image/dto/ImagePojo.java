@@ -13,6 +13,8 @@ public class ImagePojo {
 
     private Long id;
     private Long userId;
+    private Long facilityId;
+    private Long machineId;
     private String type;
     private String originalName;
     private String contentType;
@@ -28,6 +30,8 @@ public class ImagePojo {
     public ImagePojo(Image entity) {
         this.id = entity.getId();
         this.userId = entity.getUser() != null ? entity.getUser().getId() : null;
+        this.facilityId = entity.getFacility() != null ? entity.getFacility().getId() : null;
+        this.machineId = entity.getMachine() != null ? entity.getMachine().getId() : null;
         this.type = entity.getType();
         this.originalName = entity.getOriginalName();
         this.contentType = entity.getContentType();

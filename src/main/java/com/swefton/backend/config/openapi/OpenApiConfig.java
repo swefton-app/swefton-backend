@@ -191,6 +191,7 @@ public class OpenApiConfig {
     private boolean isNoContent(String path, String method) {
         if ("DELETE".equals(method)) {
             return path.equals("/api/v1/user")
+                    || path.startsWith("/api/v1/machine/")
                     || path.startsWith("/api/v1/trainer/")
                     || path.startsWith("/api/v1/facility/documents/")
                     || path.startsWith("/api/v1/gym-management/");
@@ -221,6 +222,7 @@ public class OpenApiConfig {
     private boolean isMultipartEndpoint(String path, String method) {
         return "POST".equals(method)
                 && (path.equals("/api/v1/images")
+                        || path.equals("/api/v1/videos")
                         || path.equals("/api/v1/trainer/documents")
                         || path.equals("/api/v1/facility/documents")
                         || path.endsWith("/images"));
@@ -231,6 +233,18 @@ public class OpenApiConfig {
             return new AccessRule(true, List.of("PUBLIC"), "PUBLIC - no JWT required.");
         }
         if (path.startsWith("/api/v1/admin/")) {
+            return new AccessRule(false, List.of("ADMIN"), "ADMIN role with a valid JWT.");
+        }
+        if (path.startsWith("/api/v1/machine")) {
+            if ("GET".equals(method)) {
+                return new AccessRule(
+                        false,
+                        List.of("FACILITY_OWNER", "ADMIN"),
+                        "FACILITY_OWNER or ADMIN role with a valid JWT.");
+            }
+            return new AccessRule(false, List.of("ADMIN"), "ADMIN role with a valid JWT.");
+        }
+        if (path.startsWith("/api/v1/videos")) {
             return new AccessRule(false, List.of("ADMIN"), "ADMIN role with a valid JWT.");
         }
         if (path.startsWith("/api/v1/trainer/")) {
@@ -296,6 +310,9 @@ public class OpenApiConfig {
         if ("GET".equals(method) && path.startsWith("/api/v1/images/")) {
             return true;
         }
+        if ("GET".equals(method) && path.startsWith("/api/v1/videos/")) {
+            return true;
+        }
         return path.equals("/api/v1/auth/register")
                 || path.equals("/api/v1/auth/login")
                 || path.equals("/api/v1/auth/refresh")
@@ -307,6 +324,7 @@ public class OpenApiConfig {
         if (path.startsWith("/api/v1/auth")) return "Authentication";
         if (path.startsWith("/api/v1/user")) return "User account";
         if (path.startsWith("/api/v1/images")) return "User images";
+        if (path.startsWith("/api/v1/videos")) return "Movement videos";
         if (path.startsWith("/api/v1/public/trainers") || path.equals("/api/v1/public/categories")) {
             return "Public trainers";
         }
@@ -325,7 +343,7 @@ public class OpenApiConfig {
             return "Gym management";
         }
         if (path.startsWith("/api/v1/gym-memberships")) return "Gym memberships";
-        if (path.startsWith("/api/v1/admin")) return "Administration";
+        if (path.startsWith("/api/v1/admin") || path.startsWith("/api/v1/machine")) return "Administration";
         return "Other";
     }
 

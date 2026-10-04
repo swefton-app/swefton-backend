@@ -61,7 +61,7 @@ public class ImageService {
             long storedSize = objectStorage.store(storageKey, content);
             try {
                 Image image = new Image();
-                image.setUser(user);
+                image.assignToUser(user);
                 image.setType(validatedType(request.getType()));
                 image.setFilePath(storageKey);
                 image.setOriginalName(originalName);
@@ -136,6 +136,26 @@ public class ImageService {
     private Image ownedImage(Long id) {
         return imageRepository.findByIdAndUserIdAndDeletedAtIsNull(id, sessionUser.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Image not found"));
+    }
+
+    @Transactional
+    public void deleteAssignedImage(Image image) {
+        if (image == null || image.getDeletedAt() != null) {
+            return;
+        }
+        image.setDeletedAt(LocalDateTime.now());
+        imageRepository.saveAndFlush(image);
+        objectStorage.delete(image.getFilePath());
+    }
+
+    @Transactional
+    public void deleteAssignedImagePermanently(Image image) {
+        if (image == null) {
+            return;
+        }
+        objectStorage.delete(image.getFilePath());
+        imageRepository.delete(image);
+        imageRepository.flush();
     }
 
 

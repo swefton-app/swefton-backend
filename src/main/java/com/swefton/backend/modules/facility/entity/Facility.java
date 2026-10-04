@@ -4,10 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.swefton.backend.modules.image.entity.Image;
 import com.swefton.backend.modules.user.entity.User;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,12 +17,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+
 
 @Entity
 @Table(name = "facility")
@@ -82,18 +80,27 @@ public class Facility {
         @Column(precision = 10, scale = 7)
         private BigDecimal longitude;
 
+        @Deprecated(forRemoval = true)
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "logo_image_id", foreignKey = @ForeignKey(name = "fk_facility_logo_image"))
-        private Image logoImage;
+        private Image legacyLogoImage;
 
+        @Deprecated(forRemoval = true)
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "cover_image_id", foreignKey = @ForeignKey(name = "fk_facility_cover_image"))
-        private Image coverImage;
+        private Image legacyCoverImage;
 
+        @Deprecated(forRemoval = true)
         @ManyToMany(fetch = FetchType.LAZY)
-        @JoinTable(name = "facility_gallery_images", joinColumns = @JoinColumn(name = "facility_id", foreignKey = @ForeignKey(name = "fk_facility_gallery_facility")), inverseJoinColumns = @JoinColumn(name = "image_id", foreignKey = @ForeignKey(name = "fk_facility_gallery_image")))
-        @OrderColumn(name = "position")
-        private List<Image> galleryImages = new ArrayList<>();
+        @JoinTable(
+                name = "facility_gallery_images",
+                joinColumns = @JoinColumn(
+                        name = "facility_id",
+                        foreignKey = @ForeignKey(name = "fk_facility_gallery_facility")),
+                inverseJoinColumns = @JoinColumn(
+                        name = "image_id",
+                        foreignKey = @ForeignKey(name = "fk_facility_gallery_image")))
+        private List<Image> legacyGalleryImages = new ArrayList<>();
 
         @Column(name = "created_at", nullable = false, updatable = false)
         private LocalDateTime createdAt;

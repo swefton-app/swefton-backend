@@ -81,7 +81,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/images/**")
                         .permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/v1/videos/**")
+                        .permitAll()
+
                         .requestMatchers("/api/v1/admin/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/machine", "/api/v1/machine/**")
+                        .hasAnyRole("ADMIN", "FACILITY_OWNER")
+
+                        .requestMatchers("/api/v1/machine", "/api/v1/machine/**")
                         .hasRole("ADMIN")
 
                         .requestMatchers("/api/v1/trainer/**")

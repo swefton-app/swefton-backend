@@ -80,9 +80,17 @@ public class GymService {
         facility.setFormattedAddress(normalizeFormattedAddress(request.formattedAddress()));
         facility.setLatitude(request.latitude());
         facility.setLongitude(request.longitude());
-        facility.setLogoImage(resolveImage(owner.getId(), request.logoImageId(), ImageType.LOGO, "Logo"));
-        facility.setCoverImage(resolveImage(owner.getId(), request.coverImageId(), ImageType.COVER, "Cover"));
-        facility.setGalleryImages(resolveGalleryImages(owner.getId(), request.galleryImageIds()));
+        Image logoImage = resolveImage(owner.getId(), request.logoImageId(), ImageType.LOGO, "Logo");
+        Image coverImage = resolveImage(owner.getId(), request.coverImageId(), ImageType.COVER, "Cover");
+        List<Image> galleryImages = resolveGalleryImages(owner.getId(), request.galleryImageIds());
+        List<Image> selectedImages = new ArrayList<>();
+        if (logoImage != null) {
+            selectedImages.add(logoImage);
+        }
+        if (coverImage != null) {
+            selectedImages.add(coverImage);
+        }
+        selectedImages.addAll(galleryImages);
 
         Gym gym = new Gym();
         gym.setFacility(facility);
@@ -91,7 +99,10 @@ public class GymService {
         gym.setOpen24Hours(request.open24Hours());
         gym.setStatus(GymStatus.DRAFT);
 
-        return toResponse(gymRepository.saveAndFlush(gym));
+        Gym saved = gymRepository.saveAndFlush(gym);
+        selectedImages.forEach(image -> image.assignToFacility(saved.getFacility()));
+        imageRepository.saveAllAndFlush(selectedImages);
+        return toResponse(saved, selectedImages);
     }
 
     @Transactional(readOnly = true)
@@ -135,6 +146,13 @@ public class GymService {
     }
 
     private GymResponse toResponse(Gym gym) {
+        List<Image> images = imageRepository
+                .findAllByFacilityIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(
+                        gym.getFacility().getId());
+        return toResponse(gym, images);
+    }
+
+    private GymResponse toResponse(Gym gym, List<Image> images) {
         Facility facility = gym.getFacility();
         return new GymResponse(
                 gym.getId(),
@@ -158,9 +176,9 @@ public class GymService {
                 gym.getCapacity(),
                 gym.isOpen24Hours(),
                 gym.getStatus(),
-                toImageResponse(facility.getLogoImage()),
-                toImageResponse(facility.getCoverImage()),
-                facility.getGalleryImages().stream().map(ImagePojo::new).toList(),
+                firstImageOfType(images, ImageType.LOGO),
+                firstImageOfType(images, ImageType.COVER),
+                imagesOfType(images, ImageType.GALLERY),
                 ratingService.facilityAverage(facility.getId()),
                 ratingService.facilityRatingCount(facility.getId()),
                 gym.getCreatedAt());
@@ -219,6 +237,21 @@ public class GymService {
 
     private ImagePojo toImageResponse(Image image) {
         return image == null ? null : new ImagePojo(image);
+    }
+
+    private ImagePojo firstImageOfType(List<Image> images, String type) {
+        return images.stream()
+                .filter(image -> type.equals(image.getType()))
+                .findFirst()
+                .map(this::toImageResponse)
+                .orElse(null);
+    }
+
+    private List<ImagePojo> imagesOfType(List<Image> images, String type) {
+        return images.stream()
+                .filter(image -> type.equals(image.getType()))
+                .map(ImagePojo::new)
+                .toList();
     }
 
     private void validateCoordinates(CreateFacilityRequest request) {

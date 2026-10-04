@@ -9,8 +9,9 @@ public final class ImageType {
     public static final String COVER = "COVER";
     public static final String LOGO = "LOGO";
     public static final String GALLERY = "GALLERY";
+    public static final String MACHINE = "MACHINE";
 
-    private static final Set<String> VALUES = Set.of(PROFILE, COVER, LOGO, GALLERY);
+    private static final Set<String> VALUES = Set.of(PROFILE, COVER, LOGO, GALLERY, MACHINE);
 
     private ImageType() {
     }

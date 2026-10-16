@@ -79,6 +79,18 @@ public class UserServiceImpl implements UserService {
         return toOnboardingResponse(user, profile, preferences, address);
     }
 
+    @Override
+    @Transactional
+    public UserAddressPojo updateAddress(UserAddressPojo request) {
+        User user = currentUser();
+        UserAddress address = userAddressRepository.findByUserId(user.getId())
+                .stream()
+                .findFirst()
+                .orElseGet(() -> newAddress(user));
+        address.updateFrom(request);
+        return new UserAddressPojo(userAddressRepository.saveAndFlush(address));
+    }
+
     private User currentUser() {
         return userRepository.findById(sessionUser.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));

@@ -1,6 +1,7 @@
 package com.swefton.backend.modules.gym.entity;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import com.swefton.backend.modules.facility.entity.Facility;
 import com.swefton.backend.modules.gym.enums.GymStatus;
@@ -48,6 +49,18 @@ public class Gym {
     @Column(name = "open_24_hours", nullable = false)
     private boolean open24Hours;
 
+    @Column(name = "weekday_open_time")
+    private LocalTime weekdayOpenTime;
+
+    @Column(name = "weekday_close_time")
+    private LocalTime weekdayCloseTime;
+
+    @Column(name = "weekend_open_time")
+    private LocalTime weekendOpenTime;
+
+    @Column(name = "weekend_close_time")
+    private LocalTime weekendCloseTime;
+
     @Column(nullable = false, length = 30)
     private String status = GymStatus.DRAFT;
 
@@ -67,6 +80,12 @@ public class Gym {
         }
         if (status == null) {
             status = GymStatus.DRAFT;
+        }
+        if (!open24Hours) {
+            if (weekdayOpenTime == null) weekdayOpenTime = LocalTime.of(6, 0);
+            if (weekdayCloseTime == null) weekdayCloseTime = LocalTime.of(22, 0);
+            if (weekendOpenTime == null) weekendOpenTime = LocalTime.of(8, 0);
+            if (weekendCloseTime == null) weekendCloseTime = LocalTime.of(20, 0);
         }
     }
 

@@ -29,4 +29,19 @@ class EmailServiceTests {
                 10));
         verify(mailSender).send(message);
     }
+
+    @Test
+    void sendsPlainTextAndHtmlPasswordResetEmailAsMultipartMessage() {
+        JavaMailSender mailSender = mock(JavaMailSender.class);
+        MimeMessage message = new MimeMessage(Session.getInstance(new Properties()));
+        when(mailSender.createMimeMessage()).thenReturn(message);
+
+        EmailService emailService = new EmailService(mailSender, "test@swefton.local");
+
+        assertDoesNotThrow(() -> emailService.sendPasswordResetCode(
+                "user@example.com",
+                "654321",
+                10));
+        verify(mailSender).send(message);
+    }
 }

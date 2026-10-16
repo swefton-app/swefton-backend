@@ -31,6 +31,7 @@ import com.swefton.backend.modules.gym.repository.GymRepository;
 import com.swefton.backend.modules.image.entity.Image;
 import com.swefton.backend.modules.image.enums.ImageType;
 import com.swefton.backend.modules.image.repository.ImageRepository;
+import com.swefton.backend.modules.image.service.ImageService;
 import com.swefton.backend.modules.user.entity.User;
 import com.swefton.backend.modules.user.repository.UserRepository;
 import com.swefton.backend.modules.user.service.RatingService;
@@ -54,6 +55,9 @@ class GymServiceTests {
     @Mock
     private RatingService ratingService;
 
+    @Mock
+    private ImageService imageService;
+
     private GymService gymService;
 
     @BeforeEach
@@ -63,7 +67,8 @@ class GymServiceTests {
                 imageRepository,
                 userRepository,
                 sessionUser,
-                ratingService);
+                ratingService,
+                imageService);
     }
 
     @Test
@@ -319,6 +324,40 @@ class GymServiceTests {
         assertThat(response.longitude()).isEqualByComparingTo("19.8200000");
         verify(gymRepository).findByIdAndFacilityOwnerId(7L, 42L);
         verify(gymRepository).saveAndFlush(gym);
+    }
+
+    @Test
+    void updateImageAssignsReplacementAndSoftDeletesPreviousImage() {
+        User owner = new User();
+        owner.setId(42L);
+        Facility facility = new Facility();
+        facility.setId(8L);
+        facility.setOwner(owner);
+        facility.setName("Power House");
+        facility.setCategory(FacilityCategory.GYM);
+        Gym gym = new Gym();
+        gym.setId(7L);
+        gym.setFacility(facility);
+        gym.setType(GymType.COMMERCIAL);
+        gym.setStatus(GymStatus.DRAFT);
+        Image previous = image(owner, 10L, ImageType.LOGO, 0);
+        previous.assignToFacility(facility);
+        Image replacement = image(owner, 11L, ImageType.LOGO, 0);
+
+        when(sessionUser.getUserId()).thenReturn(42L);
+        when(gymRepository.findByIdAndFacilityOwnerId(7L, 42L)).thenReturn(Optional.of(gym));
+        when(imageRepository.findByIdAndUserIdAndDeletedAtIsNull(11L, 42L))
+                .thenReturn(Optional.of(replacement));
+        when(imageRepository.findAllByFacilityIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(8L))
+                .thenReturn(List.of(previous), List.of(replacement));
+
+        GymResponse response = gymService.updateImage(7L, 11L, ImageType.LOGO);
+
+        assertThat(response.logoImage().getId()).isEqualTo(11L);
+        assertThat(replacement.getFacility()).isSameAs(facility);
+        assertThat(replacement.getUser()).isNull();
+        verify(imageRepository).saveAndFlush(replacement);
+        verify(imageService).deleteAssignedImage(previous);
     }
 
     private CreateFacilityRequest request(String name) {

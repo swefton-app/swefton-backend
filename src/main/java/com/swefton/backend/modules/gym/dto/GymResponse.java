@@ -2,6 +2,7 @@ package com.swefton.backend.modules.gym.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import com.swefton.backend.modules.image.dto.ImagePojo;
@@ -27,6 +28,10 @@ public record GymResponse(
         String type,
         Integer capacity,
         boolean open24Hours,
+        LocalTime weekdayOpenTime,
+        LocalTime weekdayCloseTime,
+        LocalTime weekendOpenTime,
+        LocalTime weekendCloseTime,
         String status,
         ImagePojo logoImage,
         ImagePojo coverImage,

@@ -19,8 +19,11 @@ import com.swefton.backend.modules.gym.dto.CompleteGymOnboardingRequest;
 import com.swefton.backend.modules.gym.dto.CompleteGymOnboardingResponse;
 import com.swefton.backend.modules.gym.dto.GymResponse;
 import com.swefton.backend.modules.gym.dto.UpdateGymLocationRequest;
+import com.swefton.backend.modules.gym.dto.UpdateGymHoursRequest;
+import com.swefton.backend.modules.gym.dto.UpdateGymImageRequest;
 import com.swefton.backend.modules.gym.service.GymOnboardingService;
 import com.swefton.backend.modules.gym.service.GymService;
+import com.swefton.backend.modules.image.enums.ImageType;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +63,27 @@ public class GymController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateGymLocationRequest request) {
         return ResponseEntity.ok(gymService.updateLocation(id, request));
+    }
+
+    @PatchMapping("/{id}/hours")
+    public ResponseEntity<GymResponse> updateHours(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateGymHoursRequest request) {
+        return ResponseEntity.ok(gymService.updateHours(id, request));
+    }
+
+    @PatchMapping("/{id}/logo")
+    public ResponseEntity<GymResponse> updateLogo(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateGymImageRequest request) {
+        return ResponseEntity.ok(gymService.updateImage(id, request.imageId(), ImageType.LOGO));
+    }
+
+    @PatchMapping("/{id}/cover")
+    public ResponseEntity<GymResponse> updateCover(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateGymImageRequest request) {
+        return ResponseEntity.ok(gymService.updateImage(id, request.imageId(), ImageType.COVER));
     }
 
     @GetMapping("/facility/{facilityId}")

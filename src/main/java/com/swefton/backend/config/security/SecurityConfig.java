@@ -73,6 +73,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/verify-email",
                                 "/api/v1/auth/resend-verification-code",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/public/**",
                                 "/actuator/health"
@@ -81,14 +83,35 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/images/**")
                         .permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/v1/videos/**")
+                        .permitAll()
+
                         .requestMatchers("/api/v1/admin/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/machine", "/api/v1/machine/**")
+                        .hasAnyRole("ADMIN", "FACILITY_OWNER")
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/machine")
+                        .hasRole("FACILITY_OWNER")
+
+                        .requestMatchers("/api/v1/machine", "/api/v1/machine/**")
                         .hasRole("ADMIN")
 
                         .requestMatchers("/api/v1/trainer/**")
                         .hasRole("TRAINER")
 
-                        .requestMatchers("/api/v1/gym-owner/**")
-                        .hasRole("GYM_OWNER")
+                        .requestMatchers(
+                                "/api/v1/gyms/**",
+                                "/api/v1/facility/documents/**",
+                                "/api/v1/gym-owner/**")
+                        .hasRole("FACILITY_OWNER")
+
+                        .requestMatchers("/api/v1/facilities/**")
+                        .hasAnyRole("FACILITY_OWNER", "ADMIN")
+
+                        .requestMatchers("/api/v1/staff/**")
+                        .hasRole("STAFF")
 
                         .requestMatchers("/api/v1/appointments/**")
                         .hasRole("USER")

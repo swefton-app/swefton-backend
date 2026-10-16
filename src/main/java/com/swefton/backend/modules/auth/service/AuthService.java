@@ -15,6 +15,10 @@ import com.swefton.backend.modules.auth.dto.request.RefreshTokenRequest;
 import com.swefton.backend.modules.auth.dto.request.RegisterRequest;
 import com.swefton.backend.modules.auth.dto.request.ResendVerificationCodeRequest;
 import com.swefton.backend.modules.auth.dto.request.VerifyEmailRequest;
+import com.swefton.backend.modules.auth.dto.request.ChangePasswordRequest;
+import com.swefton.backend.modules.auth.dto.request.ForgotPasswordRequest;
+import com.swefton.backend.modules.auth.dto.request.ResetPasswordRequest;
+import com.swefton.backend.modules.auth.dto.response.AuthResponse;
 import com.swefton.backend.modules.auth.dto.response.RegisterResponse;
 import com.swefton.backend.modules.auth.dto.response.TokenResponse;
 import com.swefton.backend.modules.user.entity.Role;
@@ -38,6 +42,7 @@ public class AuthService {
     private final AuthTokenService authTokenService;
     private final RefreshTokenService refreshTokenService;
     private final RevokedTokenService revokedTokenService;
+    private final PasswordResetService passwordResetService;
 
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
@@ -47,11 +52,11 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
-        RoleCode requestedRole = request.role() == null ? RoleCode.USER : request.role();
-        if (requestedRole == RoleCode.ADMIN) {
+        String requestedRole = request.role() == null ? RoleCode.USER : request.role();
+        if (RoleCode.ADMIN.equals(requestedRole) || RoleCode.STAFF.equals(requestedRole)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "ADMIN cannot be selected during registration");
+                    "This role cannot be selected during registration");
         }
 
         Role role = roleRepository.findByCode(requestedRole)
@@ -83,7 +88,7 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmailIgnoreCase(normalizeEmail(request.email()))
                 .orElseThrow(this::invalidCredentials);
 
@@ -101,7 +106,7 @@ public class AuthService {
 
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
-        return authTokenService.issue(user);
+        return authTokenService.issue(user, false);
     }
 
     @Transactional(readOnly = true)
@@ -139,6 +144,54 @@ public class AuthService {
                 .ifPresent(emailVerificationService::resendCode);
     }
 
+    public void forgotPassword(ForgotPasswordRequest request) {
+        try {
+            userRepository.findByEmailIgnoreCase(normalizeEmail(request.email()))
+                    .filter(User::isEnabled)
+                    .filter(user -> user.getPasswordHash() != null && !user.getPasswordHash().isBlank())
+                    .ifPresent(passwordResetService::issueCode);
+        } catch (RuntimeException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Email service is unavailable. Please try again later.",
+                    exception);
+        }
+    }
+
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
+        }
+        User user = userRepository.findByEmailIgnoreCase(normalizeEmail(request.email()))
+                .filter(User::isEnabled)
+                .filter(candidate -> candidate.getPasswordHash() != null && !candidate.getPasswordHash().isBlank())
+                .orElseThrow(this::invalidResetCode);
+        passwordResetService.verifyCode(user.getId(), request.code());
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        if (!request.newPassword().equals(request.confirmPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password changes are unavailable for Google-only accounts");
+        }
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+        }
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different from the current password");
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+    }
+
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase();
     }
@@ -151,5 +204,9 @@ public class AuthService {
         return new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
                 "Invalid or expired verification code");
+    }
+
+    private ResponseStatusException invalidResetCode() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired reset code");
     }
 }

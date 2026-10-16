@@ -6,8 +6,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
-import com.swefton.backend.modules.user.enums.RoleCode;
-
 @Component
 public class SessionUser implements ISessionUser {
 
@@ -21,7 +19,7 @@ public class SessionUser implements ISessionUser {
     }
 
     @Override
-    public RoleCode getRole(){
+    public String getRole(){
         String role=getAuthentication()
             .getToken()
             .getClaimAsString("role");
@@ -32,12 +30,12 @@ public class SessionUser implements ISessionUser {
             );
         }
 
-        return RoleCode.valueOf(role);
+        return role;
     }
 
     @Override
-    public boolean hasRole(RoleCode role){
-        return getRole()==role;
+    public boolean hasRole(String role){
+        return getRole().equals(role);
     }
 
     private JwtAuthenticationToken getAuthentication(){

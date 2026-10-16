@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        @page { size: A4; margin: 21mm; }
+        * { box-sizing: border-box; }
+        body { margin: 0; color: #181818; font-family: Arial, sans-serif; font-size: 9.5pt; line-height: 1.5; }
+        header { margin-bottom: 28px; }
+        h1 { margin: 0; font-size: 29pt; font-weight: 500; letter-spacing: -1.3px; }
+        .title { margin-top: 2px; color: #666; font-size: 11pt; }
+        .contact { margin-top: 12px; font-size: 8.5pt; }
+        .contact span + span:before { content: "  /  "; color: #aaa; }
+        section { display: table; width: 100%; margin-top: 22px; }
+        h2 { display: table-cell; width: 25%; margin: 0; padding-right: 18px; color: #777; font-size: 8pt; vertical-align: top; text-transform: uppercase; letter-spacing: 1.6px; }
+        .section-content { display: table-cell; width: 75%; vertical-align: top; }
+        p { margin: 0; }
+        .entry { margin-bottom: 15px; page-break-inside: avoid; }
+        .entry-head { display: table; width: 100%; }
+        .entry-name, .date { display: table-cell; }
+        .entry-name { font-size: 10.5pt; font-weight: bold; }
+        .date { color: #777; font-size: 8.5pt; text-align: right; }
+        .subtitle { margin: 1px 0 5px; color: #555; }
+        .description, .summary { color: #333; white-space: pre-line; }
+        .tags span { display: inline-block; margin: 0 11px 5px 0; padding-bottom: 2px; border-bottom: 1px solid #bbb; }
+        .language { display: inline-block; margin: 0 18px 6px 0; }
+        .language em { color: #777; font-size: 8.5pt; font-style: normal; text-transform: capitalize; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span th:text="${cv.firstName}">First</span> <span th:text="${cv.lastName}">Last</span></h1>
+        <div class="title" th:text="${cv.professionalTitle}">Personal Trainer</div>
+        <div class="contact">
+            <span th:text="${cv.email}">email@example.com</span>
+            <span th:if="${!#strings.isEmpty(cv.phone)}" th:text="${cv.phone}">Phone</span>
+            <span th:if="${!#strings.isEmpty(cv.city)}" th:text="${cv.city}">City</span>
+        </div>
+    </header>
+    <section th:if="${!#strings.isEmpty(cv.summary)}"><h2>About</h2><div class="section-content"><p class="summary" th:text="${cv.summary}">Professional summary</p></div></section>
+    <section th:if="${!#lists.isEmpty(cv.experiences)}">
+        <h2>Experience</h2>
+        <div class="section-content">
+            <article class="entry" th:each="item : ${cv.experiences}">
+                <div class="entry-head"><span class="entry-name" th:text="${item.position}">Position</span><span class="date"><span th:text="${item.startDate}">Start</span> &#8212; <span th:text="${item.current ? 'Present' : item.endDate}">End</span></span></div>
+                <div class="subtitle" th:text="${item.company}">Company</div>
+                <p class="description" th:if="${!#strings.isEmpty(item.description)}" th:text="${item.description}">Description</p>
+            </article>
+        </div>
+    </section>
+    <section th:if="${!#lists.isEmpty(cv.education)}">
+        <h2>Education</h2>
+        <div class="section-content">
+            <article class="entry" th:each="item : ${cv.education}">
+                <div class="entry-head"><span class="entry-name" th:text="${item.degree}">Degree</span><span class="date"><span th:text="${item.startDate}">Start</span> &#8212; <span th:text="${item.current ? 'Present' : item.endDate}">End</span></span></div>
+                <div class="subtitle"><span th:text="${item.institution}">Institution</span><span th:if="${!#strings.isEmpty(item.fieldOfStudy)}"> &#183; <span th:text="${item.fieldOfStudy}">Field</span></span></div>
+            </article>
+        </div>
+    </section>
+    <section th:if="${!#lists.isEmpty(cv.certifications)}">
+        <h2>Credentials</h2>
+        <div class="section-content">
+            <article class="entry" th:each="item : ${cv.certifications}"><strong th:text="${item.name}">Certification</strong><span th:if="${!#strings.isEmpty(item.issuer)}">, <span th:text="${item.issuer}">Issuer</span></span><span class="date" th:if="${!#strings.isEmpty(item.issueDate)}"> &#183; <span th:text="${item.issueDate}">Date</span></span></article>
+        </div>
+    </section>
+    <section th:if="${!#lists.isEmpty(cv.skills)}"><h2>Skills</h2><div class="section-content tags"><span th:each="skill : ${cv.skills}" th:text="${skill}">Skill</span></div></section>
+    <section th:if="${!#lists.isEmpty(cv.languages)}"><h2>Languages</h2><div class="section-content"><span class="language" th:each="item : ${cv.languages}"><strong th:text="${item.language}">Language</strong> <em th:text="${#strings.toLowerCase(item.level)}">Level</em></span></div></section>
+</body>
+</html>

@@ -1,6 +1,10 @@
 package com.swefton.backend.modules.auth.enums;
 
-public enum AuthProvider {
-    GOOGLE,
-    APPLE
+public final class AuthProvider {
+
+    public static final String GOOGLE = "GOOGLE";
+    public static final String APPLE = "APPLE";
+
+    private AuthProvider() {
+    }
 }

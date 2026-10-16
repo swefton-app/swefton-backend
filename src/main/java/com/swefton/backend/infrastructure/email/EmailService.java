@@ -80,6 +80,39 @@ public class EmailService {
         }
     }
 
+    public void sendPasswordResetCode(String recipient, String code, long expirationMinutes) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(from);
+            helper.setTo(recipient);
+            helper.setSubject("Reset your Swefton password");
+            helper.setText(
+                    "Reset your Swefton password\n\nYour verification code is: " + code
+                            + "\n\nThis code expires in " + expirationMinutes
+                            + " minutes. If you did not request this, you can ignore this email.",
+                    passwordResetHtml(code, expirationMinutes));
+            helper.addInline("sweftonLogo", new ClassPathResource("static/images/SweftonLogoHeader.png"), "image/png");
+            mailSender.send(message);
+        } catch (MessagingException exception) {
+            throw new IllegalStateException("Could not prepare password reset email", exception);
+        }
+    }
+
+    private String passwordResetHtml(String code, long expirationMinutes) {
+        return """
+                <!doctype html><html lang="en"><body style="margin:0;padding:40px 16px;background:#050608;color:#f6f8fc;font-family:Arial,sans-serif;">
+                <table role="presentation" width="100%%"><tr><td align="center"><table role="presentation" width="100%%" style="max-width:560px;border:1px solid #343b49;border-radius:20px;background:#0c0f16;">
+                <tr><td align="center" style="padding:36px 36px 8px"><img src="cid:sweftonLogo" width="300" alt="Swefton"></td></tr>
+                <tr><td align="center" style="padding:20px 36px 40px"><div style="color:#02d9f5;font-size:11px;font-weight:700;letter-spacing:1px">PASSWORD RESET</div>
+                <h1 style="margin:22px 0 12px">Reset your password</h1><p style="color:#aeb6c5;line-height:24px">Use this secure code to choose a new password.</p>
+                <div style="display:inline-block;margin:22px 0;padding:18px 28px;border-radius:14px;background:#141925;color:#f6f8fc;font-family:monospace;font-size:34px;font-weight:700;letter-spacing:8px">%s</div>
+                <p style="color:#7f8797;font-size:13px">This code expires in <strong style="color:#02d9f5">%d minutes</strong>. Never share it with anyone.</p>
+                <p style="margin-top:28px;color:#596171;font-size:12px">If you did not request a password reset, you can safely ignore this email.</p>
+                </td></tr></table></td></tr></table></body></html>
+                """.formatted(code, expirationMinutes);
+    }
+
     private String staffInvitationPlainText(
             String facilityName,
             String onboardingUrl,

@@ -17,6 +17,9 @@ import com.swefton.backend.modules.auth.dto.request.RefreshTokenRequest;
 import com.swefton.backend.modules.auth.dto.request.RegisterRequest;
 import com.swefton.backend.modules.auth.dto.request.ResendVerificationCodeRequest;
 import com.swefton.backend.modules.auth.dto.request.VerifyEmailRequest;
+import com.swefton.backend.modules.auth.dto.request.ChangePasswordRequest;
+import com.swefton.backend.modules.auth.dto.request.ForgotPasswordRequest;
+import com.swefton.backend.modules.auth.dto.request.ResetPasswordRequest;
 import com.swefton.backend.modules.auth.dto.response.RegisterResponse;
 import com.swefton.backend.modules.auth.dto.response.AuthResponse;
 import com.swefton.backend.modules.auth.dto.response.AuthDestinationResponse;
@@ -24,6 +27,7 @@ import com.swefton.backend.modules.auth.dto.response.TokenResponse;
 import com.swefton.backend.modules.auth.service.AuthService;
 import com.swefton.backend.modules.auth.service.AuthDestinationService;
 import com.swefton.backend.modules.auth.service.GoogleAuthService;
+import com.swefton.backend.session.ISessionUser;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,7 @@ public class AuthController {
     private final AuthService authService;
     private final AuthDestinationService authDestinationService;
     private final GoogleAuthService googleAuthService;
+    private final ISessionUser sessionUser;
 
     @GetMapping("/destination")
     public ResponseEntity<AuthDestinationResponse> destination() {
@@ -78,6 +83,24 @@ public class AuthController {
     public ResponseEntity<Void> resendVerificationCode(
             @Valid @RequestBody ResendVerificationCodeRequest request) {
         authService.resendVerificationCode(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(sessionUser.getUserId(), request);
         return ResponseEntity.noContent().build();
     }
 }

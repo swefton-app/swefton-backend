@@ -18,6 +18,7 @@ import com.swefton.backend.modules.facility.entity.Facility;
 import com.swefton.backend.modules.facility.enums.FacilityCategory;
 import com.swefton.backend.modules.gym.dto.GymResponse;
 import com.swefton.backend.modules.gym.dto.UpdateGymLocationRequest;
+import com.swefton.backend.modules.gym.dto.UpdateGymHoursRequest;
 import com.swefton.backend.modules.gym.entity.Gym;
 import com.swefton.backend.modules.gym.enums.GymStatus;
 import com.swefton.backend.modules.gym.enums.GymType;
@@ -26,6 +27,7 @@ import com.swefton.backend.modules.image.dto.ImagePojo;
 import com.swefton.backend.modules.image.entity.Image;
 import com.swefton.backend.modules.image.enums.ImageType;
 import com.swefton.backend.modules.image.repository.ImageRepository;
+import com.swefton.backend.modules.image.service.ImageService;
 import com.swefton.backend.modules.user.entity.User;
 import com.swefton.backend.modules.user.repository.UserRepository;
 import com.swefton.backend.modules.user.service.RatingService;
@@ -42,6 +44,7 @@ public class GymService {
     private final UserRepository userRepository;
     private final ISessionUser sessionUser;
     private final RatingService ratingService;
+    private final ImageService imageService;
 
     @Transactional
     public GymResponse create(CreateFacilityRequest request) {
@@ -137,6 +140,44 @@ public class GymService {
         return toResponse(gymRepository.saveAndFlush(gym));
     }
 
+    @Transactional
+    public GymResponse updateHours(Long id, UpdateGymHoursRequest request) {
+        Gym gym = gymRepository.findByIdAndFacilityOwnerId(id, sessionUser.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gym not found"));
+        if (!request.open24Hours() && (request.weekdayOpenTime() == null
+                || request.weekdayCloseTime() == null
+                || request.weekendOpenTime() == null
+                || request.weekendCloseTime() == null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opening and closing times are required");
+        }
+        gym.setOpen24Hours(request.open24Hours());
+        gym.setWeekdayOpenTime(request.open24Hours() ? null : request.weekdayOpenTime());
+        gym.setWeekdayCloseTime(request.open24Hours() ? null : request.weekdayCloseTime());
+        gym.setWeekendOpenTime(request.open24Hours() ? null : request.weekendOpenTime());
+        gym.setWeekendCloseTime(request.open24Hours() ? null : request.weekendCloseTime());
+        return toResponse(gymRepository.saveAndFlush(gym));
+    }
+
+    @Transactional
+    public GymResponse updateImage(Long id, Long imageId, String imageType) {
+        Gym gym = gymRepository.findByIdAndFacilityOwnerId(id, sessionUser.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gym not found"));
+        String label = ImageType.LOGO.equals(imageType) ? "Logo" : "Cover";
+        Image replacement = resolveImage(sessionUser.getUserId(), imageId, imageType, label);
+        List<Image> currentImages = imageRepository
+                .findAllByFacilityIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(
+                        gym.getFacility().getId());
+
+        replacement.assignToFacility(gym.getFacility());
+        imageRepository.saveAndFlush(replacement);
+        currentImages.stream()
+                .filter(image -> imageType.equals(image.getType()))
+                .filter(image -> !image.getId().equals(replacement.getId()))
+                .forEach(imageService::deleteAssignedImage);
+
+        return toResponse(gym);
+    }
+
     @Transactional(readOnly = true)
     public List<GymResponse> findAllForCurrentOwner() {
         return gymRepository.findAllByFacilityOwnerIdOrderByCreatedAtAsc(sessionUser.getUserId())
@@ -175,6 +216,10 @@ public class GymService {
                 gym.getType(),
                 gym.getCapacity(),
                 gym.isOpen24Hours(),
+                gym.getWeekdayOpenTime(),
+                gym.getWeekdayCloseTime(),
+                gym.getWeekendOpenTime(),
+                gym.getWeekendCloseTime(),
                 gym.getStatus(),
                 firstImageOfType(images, ImageType.LOGO),
                 firstImageOfType(images, ImageType.COVER),

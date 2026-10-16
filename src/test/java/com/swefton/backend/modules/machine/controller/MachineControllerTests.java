@@ -37,7 +37,7 @@ class MachineControllerTests {
 
     @Test
     void findAllReturnsMachines() {
-        MachineResponse machine = response(5L, "PRESS-01");
+        MachineResponse machine = response(5L);
         when(machineService.findAll()).thenReturn(List.of(machine));
 
         ResponseEntity<List<MachineResponse>> result = controller.findAll();
@@ -48,7 +48,7 @@ class MachineControllerTests {
 
     @Test
     void findByIdReturnsMachine() {
-        MachineResponse machine = response(5L, "PRESS-01");
+        MachineResponse machine = response(5L);
         when(machineService.findById(5L)).thenReturn(machine);
 
         ResponseEntity<MachineResponse> result = controller.findById(5L);
@@ -59,8 +59,8 @@ class MachineControllerTests {
 
     @Test
     void createReturnsCreatedMachineAndLocation() {
-        MachineRequest request = request("PRESS-01");
-        MachineResponse machine = response(5L, "PRESS-01");
+        MachineRequest request = request();
+        MachineResponse machine = response(5L);
         when(machineService.create(request)).thenReturn(machine);
 
         ResponseEntity<MachineResponse> result = controller.create(request);
@@ -72,8 +72,8 @@ class MachineControllerTests {
 
     @Test
     void updateReturnsUpdatedMachine() {
-        MachineRequest request = request("PRESS-02");
-        MachineResponse machine = response(5L, "PRESS-02");
+        MachineRequest request = request();
+        MachineResponse machine = response(5L);
         when(machineService.update(5L, request)).thenReturn(machine);
 
         ResponseEntity<MachineResponse> result = controller.update(5L, request);
@@ -91,10 +91,9 @@ class MachineControllerTests {
         verify(machineService).delete(5L);
     }
 
-    private MachineRequest request(String code) {
+    private MachineRequest request() {
         return new MachineRequest(
                 "Chest Press",
-                code,
                 "Upper-body machine",
                 "GYM",
                 List.of(new MachineMovementRequest(
@@ -107,11 +106,10 @@ class MachineControllerTests {
                 List.of(9L));
     }
 
-    private MachineResponse response(Long id, String code) {
+    private MachineResponse response(Long id) {
         return new MachineResponse(
                 id,
                 "Chest Press",
-                code,
                 "Upper-body machine",
                 "Gym",
                 List.of(new MachineMovementResponse(

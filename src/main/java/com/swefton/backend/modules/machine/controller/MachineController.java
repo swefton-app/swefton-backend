@@ -49,7 +49,7 @@ public class MachineController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('FACILITY_OWNER')")
     public ResponseEntity<MachineResponse> create(
             @Valid @RequestBody MachineRequest request) {
         MachineResponse created = machineService.create(request);

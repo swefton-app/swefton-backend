@@ -94,7 +94,7 @@ class MachineServiceTests {
             return machine;
         }).when(repository).saveAndFlush(any(Machine.class));
 
-        MachineResponse response = service.create(request("PRESS-01", 9L));
+        MachineResponse response = service.create(request(9L));
 
         assertThat(response.id()).isEqualTo(5L);
         assertThat(response.images()).singleElement().extracting(ImagePojo::getId).isEqualTo(9L);
@@ -123,7 +123,6 @@ class MachineServiceTests {
 
         MachineRequest request = new MachineRequest(
                 "Leg Press",
-                "LEG-01",
                 null,
                 "GYM",
                 java.util.List.of(new MachineMovementRequest(
@@ -158,7 +157,7 @@ class MachineServiceTests {
                 .thenReturn(java.util.List.of(video(30L), video(31L)));
         when(repository.saveAndFlush(machine)).thenReturn(machine);
 
-        MachineResponse response = service.update(5L, request("PRESS-02", 10L));
+        MachineResponse response = service.update(5L, request(10L));
 
         assertThat(response.images()).singleElement().extracting(ImagePojo::getId).isEqualTo(10L);
         assertThat(replacementImage.getUser()).isNull();
@@ -186,7 +185,6 @@ class MachineServiceTests {
     void createRejectsMoreThanOneMovementForTheSameMuscleGroup() {
         MachineRequest request = new MachineRequest(
                 "Chest Press",
-                "PRESS-01",
                 null,
                 "GYM",
                 java.util.List.of(
@@ -217,10 +215,9 @@ class MachineServiceTests {
                 .hasMessageContaining("only one movement per machine");
     }
 
-    private MachineRequest request(String code, Long imageId) {
+    private MachineRequest request(Long imageId) {
         return new MachineRequest(
                 " Chest Press ",
-                code,
                 " Upper-body machine ",
                 "GYM",
                 java.util.List.of(new MachineMovementRequest(
@@ -258,7 +255,6 @@ class MachineServiceTests {
         Machine machine = new Machine();
         machine.setId(5L);
         machine.setName("Chest Press");
-        machine.setCode("PRESS-01");
         machine.setFacilityCategory("GYM");
         MachineMovement movement = new MachineMovement();
         movement.setId(20L);

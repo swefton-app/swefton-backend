@@ -242,10 +242,19 @@ public class OpenApiConfig {
                         List.of("FACILITY_OWNER", "ADMIN"),
                         "FACILITY_OWNER or ADMIN role with a valid JWT.");
             }
+            if ("POST".equals(method) && path.equals("/api/v1/machine")) {
+                return new AccessRule(
+                        false,
+                        List.of("FACILITY_OWNER"),
+                        "FACILITY_OWNER role with a valid JWT.");
+            }
             return new AccessRule(false, List.of("ADMIN"), "ADMIN role with a valid JWT.");
         }
         if (path.startsWith("/api/v1/videos")) {
-            return new AccessRule(false, List.of("ADMIN"), "ADMIN role with a valid JWT.");
+            return new AccessRule(
+                    false,
+                    List.of("FACILITY_OWNER", "ADMIN"),
+                    "FACILITY_OWNER or ADMIN role with a valid JWT.");
         }
         if (path.startsWith("/api/v1/trainer/")) {
             return new AccessRule(false, List.of("TRAINER"), "TRAINER role with a valid JWT.");

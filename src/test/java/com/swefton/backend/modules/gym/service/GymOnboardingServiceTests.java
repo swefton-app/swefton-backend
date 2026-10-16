@@ -55,7 +55,7 @@ class GymOnboardingServiceTests {
                 "1 Main Street", "Tirana", null, null, "Albania",
                 "1 Main Street, Tirana, Albania",
                 new BigDecimal("41.3275000"), new BigDecimal("19.8187000"),
-                GymType.COMMERCIAL, 250, false, GymStatus.DRAFT,
+                GymType.COMMERCIAL, 250, false, null, null, null, null, GymStatus.DRAFT,
                 null, null, List.of(), BigDecimal.ZERO, 0, LocalDateTime.now());
         CompleteGymOnboardingRequest request =
                 new CompleteGymOnboardingRequest(requestOnboarding, facilityRequest);

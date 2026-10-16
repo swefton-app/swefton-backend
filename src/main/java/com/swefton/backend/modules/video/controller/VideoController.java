@@ -31,7 +31,7 @@ public class VideoController {
     private final VideoService videoService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_OWNER', 'TRAINER')")
     public ResponseEntity<VideoResponse> upload(@RequestPart("file") MultipartFile file) {
         return ResponseEntity.status(HttpStatus.CREATED).body(videoService.upload(file));
     }
@@ -42,7 +42,7 @@ public class VideoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_OWNER', 'TRAINER')")
     public ResponseEntity<Void> delete(@PathVariable @Positive Long id) {
         videoService.delete(id);
         return ResponseEntity.noContent().build();

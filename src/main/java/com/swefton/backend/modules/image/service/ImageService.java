@@ -53,6 +53,13 @@ public class ImageService {
     public ImagePojo upload(MultipartFile file, ImagePojo request) {
         validateUpload(file, request);
         User user = currentUser();
+        String imageType = validatedType(request.getType());
+        List<Image> previousProfileImages = ImageType.PROFILE.equals(imageType)
+                ? imageRepository.findAllByUserIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(user.getId())
+                        .stream()
+                        .filter(image -> ImageType.PROFILE.equals(image.getType()))
+                        .toList()
+                : List.of();
         String originalName = safeOriginalName(file.getOriginalFilename());
         String contentType = file.getContentType().toLowerCase(Locale.ROOT);
         String storageKey = createStorageKey(user.getId(), originalName);
@@ -62,13 +69,15 @@ public class ImageService {
             try {
                 Image image = new Image();
                 image.assignToUser(user);
-                image.setType(validatedType(request.getType()));
+                image.setType(imageType);
                 image.setFilePath(storageKey);
                 image.setOriginalName(originalName);
                 image.setContentType(contentType);
                 image.setFileSize(storedSize);
                 image.setPosition(request.getPosition());
-                return new ImagePojo(imageRepository.saveAndFlush(image));
+                Image saved = imageRepository.saveAndFlush(image);
+                previousProfileImages.forEach(this::deleteAssignedImage);
+                return new ImagePojo(saved);
             } catch (RuntimeException exception) {
                 objectStorage.delete(storageKey);
                 throw exception;

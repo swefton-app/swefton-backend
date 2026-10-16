@@ -195,7 +195,6 @@ class FacilityMachineServiceTests {
         Machine result = new Machine();
         result.setId(id);
         result.setName("Chest Press");
-        result.setCode("PRESS-01");
         result.setFacilityCategory("GYM");
         MachineMovement movement = new MachineMovement();
         movement.setId(20L);

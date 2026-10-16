@@ -64,7 +64,6 @@ public class MachineService {
 
     @Transactional
     public MachineResponse create(MachineRequest request) {
-        requireUniqueCode(request.code(), null);
         Machine machine = new Machine();
         List<Image> images = resolveImages(null, request.imageIds());
         Map<Long, Video> videos = resolveVideos(null, request.movements());
@@ -78,7 +77,6 @@ public class MachineService {
     @Transactional
     public MachineResponse update(Long id, MachineRequest request) {
         Machine machine = findEntityById(id);
-        requireUniqueCode(request.code(), id);
         List<Image> previousImages = activeImages(machine.getId());
         List<Image> replacementImages = resolveImages(machine.getId(), request.imageIds());
         List<Video> previousVideos = machine.getMovements().stream()
@@ -223,7 +221,6 @@ public class MachineService {
             MachineRequest request,
             Map<Long, Video> videos) {
         machine.setName(request.name().trim());
-        machine.setCode(request.code().trim());
         machine.setDescription(trimToNull(request.description()));
         machine.setFacilityCategory(validatedFacilityCategory(request.facilityCategory()));
         synchronizeMovements(machine, request.movements(), videos);
@@ -290,16 +287,6 @@ public class MachineService {
 
     }
 
-    private void requireUniqueCode(String code, Long currentId) {
-        String normalizedCode = code.trim();
-        boolean exists = currentId == null
-                ? repository.existsByCode(normalizedCode)
-                : repository.existsByCodeAndIdNot(normalizedCode, currentId);
-        if (exists) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Machine code already exists");
-        }
-    }
-
     private String trimToNull(String value) {
         if (value == null) {
             return null;
@@ -345,7 +332,6 @@ public class MachineService {
         return new MachineResponse(
                 machine.getId(),
                 machine.getName(),
-                machine.getCode(),
                 machine.getDescription(),
                 humanize(machine.getFacilityCategory()),
                 machine.getMovements().stream()

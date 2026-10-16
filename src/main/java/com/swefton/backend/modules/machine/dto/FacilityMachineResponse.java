@@ -13,7 +13,6 @@ public record FacilityMachineResponse(
         Long facilityId,
         Long machineId,
         String machineName,
-        String machineCode,
         String facilityCategory,
         List<MachineMovementResponse> movements,
         Integer quantity,
@@ -29,7 +28,6 @@ public record FacilityMachineResponse(
                 entity.getFacility().getId(),
                 entity.getMachine().getId(),
                 entity.getMachine().getName(),
-                entity.getMachine().getCode(),
                 humanize(entity.getMachine().getFacilityCategory()),
                 entity.getMachine().getMovements().stream()
                         .sorted(Comparator.comparing(MachineMovement::getPosition))

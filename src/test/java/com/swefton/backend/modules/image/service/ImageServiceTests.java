@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -134,5 +135,41 @@ class ImageServiceTests {
                 .hasMessageContaining("Image type is invalid");
 
         verify(imageRepository, org.mockito.Mockito.never()).saveAndFlush(any(Image.class));
+    }
+
+    @Test
+    void uploadingProfileImageSoftDeletesPreviousProfileImage() {
+        User user = new User();
+        user.setId(42L);
+        Image previous = new Image();
+        previous.setId(8L);
+        previous.assignToUser(user);
+        previous.setType(ImageType.PROFILE);
+        previous.setFilePath("user-images/42/old.png");
+        previous.setOriginalName("old.png");
+        previous.setContentType(MediaType.IMAGE_PNG_VALUE);
+        previous.setFileSize(4L);
+        ImagePojo request = new ImagePojo();
+        request.setType(ImageType.PROFILE);
+        request.setPosition(0);
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "new.png", MediaType.IMAGE_PNG_VALUE, "new image".getBytes());
+
+        when(sessionUser.getUserId()).thenReturn(42L);
+        when(userRepository.findById(42L)).thenReturn(Optional.of(user));
+        when(imageRepository.findAllByUserIdAndDeletedAtIsNullOrderByPositionAscCreatedAtDesc(42L))
+                .thenReturn(List.of(previous));
+        when(objectStorage.store(anyString(), any(InputStream.class))).thenReturn(9L);
+        doAnswer(invocation -> {
+            Image image = invocation.getArgument(0);
+            if (image.getId() == null) image.setId(9L);
+            return image;
+        }).when(imageRepository).saveAndFlush(any(Image.class));
+
+        ImagePojo response = imageService.upload(file, request);
+
+        assertThat(response.getId()).isEqualTo(9L);
+        assertThat(previous.getDeletedAt()).isNotNull();
+        verify(objectStorage).delete("user-images/42/old.png");
     }
 }
